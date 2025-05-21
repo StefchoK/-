@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head><title>Sell Product</title></head>
+<body>
+  <h1>Sell a Product</h1>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Post</button>
+  </form>
+  <a href="{% url 'buy' %}">Back to Buy Page</a>
+</body>
+</html>
