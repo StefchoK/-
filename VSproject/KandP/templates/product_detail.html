@@ -1,20 +1,41 @@
-<h1>{{ product.title }}</h1>
-<p>{{ product.description }}</p>
-<p>Цена: {{ product.price }} лв.</p>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ product.title }}</title>
+</head>
+<body>
+    <h1>{{ product.title }}</h1>
+    <p><strong>Описание:</strong> {{ product.description }}</p>
+    <p><strong>Цена:</strong> {{ product.price }} лв.</p>
+    <p><strong>Публикуван от:</strong> {{ product.owner.username }}</p>
 
-<h2>Коментари:</h2>
-{% for comment in comments %}
-    <p><strong>{{ comment.author.username }}</strong>: {{ comment.content }}</p>
-{% empty %}
-    <p>There are no curent comments !</p>
-{% endfor %}
+    {% if user.is_authenticated and user == product.owner %}
+        <form method="post" action="{% url 'delete_product' product.pk %}">
+            {% csrf_token %}
+            <button type="submit" style="color: red;">Изтрий този продукт</button>
+        </form>
+    {% endif %}
 
-{% if user.is_authenticated %}
-<form method="post">
-    {% csrf_token %}
-    <textarea name="content" rows="4" cols="50" placeholder="Остави коментар"></textarea><br>
-    <button type="submit">Send</button>
-</form>
-{% else %}
-<p>Log in before being able to leave a comment !</p>
-{% endif %}
+    <hr>
+
+    <h2>Коментари:</h2>
+    {% for comment in comments %}
+        <p><strong>{{ comment.author.username }}</strong>: {{ comment.content }}</p>
+    {% empty %}
+        <p>Все още няма коментари!</p>
+    {% endfor %}
+
+    {% if user.is_authenticated %}
+    <h3>Остави коментар:</h3>
+    <form method="post">
+        {% csrf_token %}
+        <textarea name="content" rows="4" cols="50" placeholder="Остави коментар тук..."></textarea><br>
+        <button type="submit">Изпрати</button>
+    </form>
+    {% else %}
+    <p>Трябва да <a href="{% url 'login' %}">влезеш в профила си</a>, за да оставиш коментар.</p>
+    {% endif %}
+
+    <br><a href="{% url 'buy' %}">← Назад към всички продукти</a>
+</body>
+</html>

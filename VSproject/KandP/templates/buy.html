@@ -1,16 +1,27 @@
 <!DOCTYPE html>
 <html>
-<head><title>Buy Products</title></head>
+<head>
+  <title>Buy Products</title>
+</head>
 <body>
   <h1>All Products</h1>
+
+  {% if user.is_authenticated %}
+    <p>Welcome, {{ user.username }} | <a href="{% url 'logout' %}">Logout</a></p>
+  {% else %}
+    <p><a href="{% url 'login' %}">Login</a> | <a href="{% url 'register' %}">Register</a></p>
+  {% endif %}
+
   <a href="{% url 'sell' %}">Sell something</a>
+
   <ul>
     {% for product in products %}
       <li>
         <a href="{% url 'product_detail' product.pk %}">
           <strong>{{ product.title }}</strong> — {{ product.price }} лв
         </a><br>
-        {{ product.description }}
+        {{ product.description }}<br>
+        <em>Posted by {{ product.owner.username }}</em>
       </li>
     {% empty %}
       <li>No products yet.</li>
