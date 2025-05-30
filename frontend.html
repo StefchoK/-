@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="bg">
 <head>
   <meta charset="UTF-8">
   <title>KnP Магазин</title>
@@ -18,154 +18,188 @@
 
   <hr>
 
-  <h2>Списък с продукти</h2>
-  <ul id="product-list"></ul>
-
-  <div id="add-section" style="display:none;">
+  <div id="add-section" style="display: none;">
     <h2>Добави продукт</h2>
     <input id="name" placeholder="Име"><br>
     <input id="desc" placeholder="Описание"><br>
     <button onclick="addProduct()">Добави</button>
   </div>
 
+  <h2>Списък с продукти</h2>
+  <ul id="product-list"></ul>
+
 <script>
-  const API = "http://127.0.0.1:5000";
+const API = "http://127.0.0.1:5000";
 
-  function saveToken(token, userId) {
-    localStorage.setItem("token", token);
-    localStorage.setItem("user_id", userId);
-    document.getElementById("auth-status").textContent = "Влязъл си!";
-    document.getElementById("add-section").style.display = "block";
+function parseJwt(token) {
+  try {
+    const payload = token.split('.')[1];
+    return JSON.parse(atob(payload));
+  } catch {
+    return null;
   }
+}
 
-  async function register() {
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
-
-    const res = await fetch(`${API}/auth/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password })
-    });
-
-    const data = await res.json();
-    alert(data.message || data.error);
-  }
-
-  async function login() {
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
-
-    const res = await fetch(`${API}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password })
-    });
-
-    const data = await res.json();
-    if (data.token) {
-      const payload = parseJwt(data.token);
-      saveToken(data.token, payload.sub);
-    } else {
-      document.getElementById("auth-status").textContent = data.error;
-    }
-  }
-
-  function parseJwt(token) {
-    try {
-      const payload = token.split('.')[1];
-      return JSON.parse(atob(payload));
-    } catch (e) {
-      return null;
-    }
-  }
-
-  async function loadProducts() {
-    const res = await fetch(`${API}/api/products`);
-    const products = await res.json();
-    const list = document.getElementById("product-list");
-    list.innerHTML = "";
-
-    for (const p of products) {
-      const li = document.createElement("li");
-      li.innerHTML = `<strong>${p.title}</strong>: ${p.description}`;
-
-      const currentUserId = localStorage.getItem("user_id");
-      if (currentUserId && Number(currentUserId) === p.user_id) {
-        const btn = document.createElement("button");
-        btn.textContent = "🗑️";
-        btn.onclick = () => deleteProduct(p.id);
-        li.appendChild(btn);
-      }
-
-      const commentsBox = document.createElement("ul");
-      const commentRes = await fetch(`${API}/api/products/${p.id}/comments`);
-      const comments = await commentRes.json();
-      comments.forEach(c => {
-        const cLi = document.createElement("li");
-        cLi.textContent = c.text;
-        commentsBox.appendChild(cLi);
-      });
-      li.appendChild(commentsBox);
-
-      if (localStorage.getItem("token")) {
-        const input = document.createElement("input");
-        input.placeholder = "Напиши коментар";
-        const btn = document.createElement("button");
-        btn.textContent = "Коментирай";
-        btn.onclick = () => addComment(p.id, input.value);
-        li.appendChild(input);
-        li.appendChild(btn);
-      }
-
-      list.appendChild(li);
-    }
-  }
-
-  async function deleteProduct(id) {
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${API}/api/products/${id}`, {
-      method: "DELETE",
-      headers: { Authorization: "Bearer " + token }
-    });
-    const data = await res.json();
-    alert(data.message || data.error);
-    loadProducts();
-  }
-
-  async function addComment(productId, text) {
-    const token = localStorage.getItem("token");
-    await fetch(`${API}/api/products/${productId}/comments`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + token
-      },
-      body: JSON.stringify({ text })
-    });
-    loadProducts();
-  }
-
-  async function addProduct() {
-    const token = localStorage.getItem("token");
-    const name = document.getElementById("name").value;
-    const desc = document.getElementById("desc").value;
-
-    const res = await fetch(`${API}/api/products`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + token
-      },
-      body: JSON.stringify({ title: name, description: desc })
-    });
-
-    const data = await res.json();
-    alert(data.message || data.error);
-    loadProducts();
-  }
-
+function saveToken(token, userId) {
+  localStorage.setItem("token", token);
+  localStorage.setItem("user_id", userId);
+  document.getElementById("auth-status").textContent = "Влязъл си!";
+  document.getElementById("add-section").style.display = "block";
   loadProducts();
+}
+
+async function register() {
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+  const res = await fetch(`${API}/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password })
+  });
+  const data = await res.json();
+  alert(data.message || data.error);
+}
+
+async function login() {
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+  const res = await fetch(`${API}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password })
+  });
+  const data = await res.json();
+  if (data.token) {
+    const payload = parseJwt(data.token);
+    saveToken(data.token, payload.sub);
+  } else {
+    document.getElementById("auth-status").textContent = data.error;
+  }
+}
+
+async function loadProducts() {
+  const res = await fetch(`${API}/api/products`);
+  const products = await res.json();
+  const list = document.getElementById("product-list");
+  list.innerHTML = "";
+  const currentUserId = localStorage.getItem("user_id");
+
+  for (const p of products) {
+    const li = document.createElement("li");
+    li.innerHTML = `<strong>${p.title}</strong>: ${p.description}`;
+
+    const commentsBox = document.createElement("ul");
+    const commentRes = await fetch(`${API}/api/products/${p.id}/comments`);
+    const comments = await commentRes.json();
+    comments.forEach(c => {
+      const cLi = document.createElement("li");
+      cLi.textContent = c.text;
+      commentsBox.appendChild(cLi);
+    });
+    li.appendChild(commentsBox);
+
+    if (localStorage.getItem("token")) {
+      const input = document.createElement("input");
+      input.placeholder = "Напиши коментар";
+      const btn = document.createElement("button");
+      btn.textContent = "Коментирай";
+      btn.onclick = () => addComment(p.id, input.value);
+      li.appendChild(input);
+      li.appendChild(btn);
+    }
+
+    if (currentUserId && Number(currentUserId) === p.user_id) {
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "🗑️";
+      delBtn.onclick = () => deleteProduct(p.id);
+      li.appendChild(delBtn);
+
+      const editBtn = document.createElement("button");
+      editBtn.textContent = "🖊️";
+      editBtn.onclick = () => showEditForm(li, p);
+      li.appendChild(editBtn);
+    }
+
+    list.appendChild(li);
+  }
+}
+
+function showEditForm(li, product) {
+  li.innerHTML = "";
+  const titleInput = document.createElement("input");
+  titleInput.value = product.title;
+  const descInput = document.createElement("input");
+  descInput.value = product.description;
+  const saveBtn = document.createElement("button");
+  saveBtn.textContent = "💾 Запази";
+  saveBtn.onclick = () => saveEdit(product.id, titleInput.value, descInput.value);
+  const cancelBtn = document.createElement("button");
+  cancelBtn.textContent = "❌ Откажи";
+  cancelBtn.onclick = () => loadProducts();
+  li.appendChild(titleInput);
+  li.appendChild(descInput);
+  li.appendChild(saveBtn);
+  li.appendChild(cancelBtn);
+}
+
+async function saveEdit(id, title, description) {
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${API}/api/products/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + token
+    },
+    body: JSON.stringify({ title, description })
+  });
+  const data = await res.json();
+  alert(data.message || data.error);
+  loadProducts();
+}
+
+async function deleteProduct(id) {
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${API}/api/products/${id}`, {
+    method: "DELETE",
+    headers: {
+      "Authorization": "Bearer " + token
+    }
+  });
+  const data = await res.json();
+  alert(data.message || data.error);
+  loadProducts();
+}
+
+async function addProduct() {
+  const token = localStorage.getItem("token");
+  const name = document.getElementById("name").value;
+  const desc = document.getElementById("desc").value;
+  const res = await fetch(`${API}/api/products`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + token
+    },
+    body: JSON.stringify({ title: name, description: desc })
+  });
+  const data = await res.json();
+  alert(data.message || data.error);
+  loadProducts();
+}
+
+async function addComment(productId, text) {
+  const token = localStorage.getItem("token");
+  await fetch(`${API}/api/products/${productId}/comments`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + token
+    },
+    body: JSON.stringify({ text })
+  });
+  loadProducts();
+}
+loadProducts();
 </script>
 </body>
 </html>
