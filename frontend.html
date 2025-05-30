@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>KnP Магазин</title>
+</head>
+<body>
+  <h1>Списък с продукти</h1>
+  <ul id="product-list"></ul>
+
+  <h2>Добави продукт</h2>
+  <input id="name" placeholder="Име"><br>
+  <input id="desc" placeholder="Описание"><br>
+  <input id="price" placeholder="Цена" type="number"><br>
+  <button onclick="addProduct()">Добави</button>
+
+  <script>
+    async function loadProducts() {
+      const res = await fetch("http://127.0.0.1:5000/api/products");
+      const products = await res.json();
+      const list = document.getElementById("product-list");
+      list.innerHTML = "";
+      products.forEach(p => {
+        const li = document.createElement("li");
+        li.textContent = `${p.name} - ${p.price} лв`;
+        list.appendChild(li);
+      });
+    }
+
+    async function addProduct() {
+      const name = document.getElementById("name").value;
+      const desc = document.getElementById("desc").value;
+      const price = document.getElementById("price").value;
+
+      await fetch("http://127.0.0.1:5000/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, description: desc, price: parseFloat(price) })
+      });
+
+      loadProducts();
+    }
+
+    loadProducts();
+  </script>
+</body>
+</html>
