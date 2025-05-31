@@ -2,10 +2,10 @@
 <html lang="bg">
 <head>
   <meta charset="UTF-8">
-  <title>KnP Магазин</title>
+  <title>KnP</title>
 </head>
 <body>
-  <h1>KnP Магазин</h1>
+  <h1>K&P (Купуваш , продаваш !)</h1>
 
   <div id="auth-section">
     <h2>Вход / Регистрация</h2>
@@ -29,7 +29,7 @@
   <ul id="product-list"></ul>
 
 <script>
-const API = "http://127.0.0.1:5000";
+const API = "http://127.0.0.1:5000/api";
 
 function parseJwt(token) {
   try {
@@ -78,7 +78,7 @@ async function login() {
 }
 
 async function loadProducts() {
-  const res = await fetch(`${API}/api/products`);
+  const res = await fetch(`${API}/products`);
   const products = await res.json();
   const list = document.getElementById("product-list");
   list.innerHTML = "";
@@ -89,7 +89,7 @@ async function loadProducts() {
     li.innerHTML = `<strong>${p.title}</strong>: ${p.description}`;
 
     const commentsBox = document.createElement("ul");
-    const commentRes = await fetch(`${API}/api/products/${p.id}/comments`);
+    const commentRes = await fetch(`${API}/products/${p.id}/comments`);
     const comments = await commentRes.json();
     comments.forEach(c => {
       const cLi = document.createElement("li");
@@ -144,7 +144,7 @@ function showEditForm(li, product) {
 
 async function saveEdit(id, title, description) {
   const token = localStorage.getItem("token");
-  const res = await fetch(`${API}/api/products/${id}`, {
+  const res = await fetch(`${API}/products/${id}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -159,7 +159,7 @@ async function saveEdit(id, title, description) {
 
 async function deleteProduct(id) {
   const token = localStorage.getItem("token");
-  const res = await fetch(`${API}/api/products/${id}`, {
+  const res = await fetch(`${API}/products/${id}`, {
     method: "DELETE",
     headers: {
       "Authorization": "Bearer " + token
@@ -171,25 +171,27 @@ async function deleteProduct(id) {
 }
 
 async function addProduct() {
+  const title = document.getElementById("name").value;
+  const description = document.getElementById("desc").value;
   const token = localStorage.getItem("token");
-  const name = document.getElementById("name").value;
-  const desc = document.getElementById("desc").value;
-  const res = await fetch(`${API}/api/products`, {
+
+  const res = await fetch(`${API}/products`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": "Bearer " + token
+      Authorization: `Bearer ${token}`
     },
-    body: JSON.stringify({ title: name, description: desc })
+    body: JSON.stringify({ title, description })
   });
+
   const data = await res.json();
-  alert(data.message || data.error);
+  alert(data.message || JSON.stringify(data));
   loadProducts();
 }
 
 async function addComment(productId, text) {
   const token = localStorage.getItem("token");
-  await fetch(`${API}/api/products/${productId}/comments`, {
+  await fetch(`${API}/products/${productId}/comments`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -199,6 +201,7 @@ async function addComment(productId, text) {
   });
   loadProducts();
 }
+
 loadProducts();
 </script>
 </body>
