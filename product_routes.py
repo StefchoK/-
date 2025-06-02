@@ -16,7 +16,9 @@ def get_products():
 @jwt_required()
 def create_product():
     data = request.get_json()
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
+    if not data or 'title' not in data:
+        return jsonify({'error': 'Missing title'}), 400
     product = Product(title=data['title'], description=data.get('description'), user_id=user_id)
     db.session.add(product)
     db.session.commit()
@@ -26,7 +28,8 @@ def create_product():
 @jwt_required()
 def edit_product(product_id):
     product = Product.query.get_or_404(product_id)
-    if product.user_id != get_jwt_identity():
+    user_id = int(get_jwt_identity())
+    if product.user_id != user_id:
         return jsonify({'error': 'Not allowed'}), 403
     data = request.get_json()
     product.title = data.get('title', product.title)
@@ -38,7 +41,8 @@ def edit_product(product_id):
 @jwt_required()
 def delete_product(product_id):
     product = Product.query.get_or_404(product_id)
-    if product.user_id != get_jwt_identity():
+    user_id = int(get_jwt_identity())
+    if product.user_id != user_id:
         return jsonify({'error': 'Not allowed'}), 403
     db.session.delete(product)
     db.session.commit()
